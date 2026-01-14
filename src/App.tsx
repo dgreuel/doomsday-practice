@@ -31,6 +31,21 @@ const DOOMSDAYS = [
   { month: 'December', day: 12, mnemonic: '12/12' },
 ]
 
+const MONTH_NAMES = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+] as const
+
 function isLeapYear(year: number): boolean {
   return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0)
 }
@@ -97,9 +112,7 @@ function generateRandomDate(startYear = 1900, endYear = 2100): { month: number; 
 }
 
 function formatDate(month: number, day: number, year: number): string {
-  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December']
-  return `${monthNames[month - 1]} ${day}, ${year}`
+  return `${MONTH_NAMES[month - 1]} ${day}, ${year}`
 }
 
 type Mode = 'learn' | 'practice' | 'speed'
@@ -119,7 +132,10 @@ function App() {
   const [showHint, setShowHint] = useState(false)
 
   const correctAnswer = getDayOfWeek(currentDate.month, currentDate.day, currentDate.year)
-  const { steps } = getYearDoomsday(currentDate.year)
+  const { doomsday: yearDoomsday, steps } = getYearDoomsday(currentDate.year)
+  const monthDoomsdayDate = getDoomsdayForMonth(currentDate.month, currentDate.year)
+  const rawOffsetDays = currentDate.day - monthDoomsdayDate
+  const offsetMod = ((rawOffsetDays % 7) + 7) % 7
 
   const nextQuestion = useCallback(() => {
     setCurrentDate(generateRandomDate())
@@ -392,8 +408,21 @@ function App() {
                     {steps.map((step, i) => (
                       <p key={i}>{step}</p>
                     ))}
-                    <p><strong>Doomsday date in month {currentDate.month}:</strong> {getDoomsdayForMonth(currentDate.month, currentDate.year)}</p>
-                    <p><strong>Offset:</strong> {currentDate.day} - {getDoomsdayForMonth(currentDate.month, currentDate.year)} = {currentDate.day - getDoomsdayForMonth(currentDate.month, currentDate.year)}</p>
+                    <p>
+                      <strong>Month doomsday:</strong>{' '}
+                      {MONTH_NAMES[currentDate.month - 1]} {monthDoomsdayDate}
+                    </p>
+                    <p>
+                      <strong>Offset from month doomsday:</strong>{' '}
+                      {currentDate.day} - {monthDoomsdayDate} = {rawOffsetDays} days
+                    </p>
+                    <p>
+                      <strong>Offset mod 7:</strong> {rawOffsetDays} mod 7 = {offsetMod}
+                    </p>
+                    <p>
+                      <strong>Final day:</strong> Start from {DAYS[yearDoomsday]} and move {offsetMod}{' '}
+                      day{offsetMod === 1 ? '' : 's'} forward → <strong>{DAYS[correctAnswer]}</strong>
+                    </p>
                   </div>
                 )}
 
